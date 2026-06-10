@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: node-api
+  labels:
+    app: node-api
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+
+  selector:
+    matchLabels:
+      app: node-api
+
+  template:
+    metadata:
+      labels:
+        app: node-api
+
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+
+    spec:
+      securityContext:
+        runAsNonRoot: true
+
+      containers:
+        - name: node-api
+
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            - name: api-web
+              containerPort: 3000
+              protocol: TCP
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+
+          env:
+            - name: NODE_ENV
+              value: "production"

@@ -1,0 +1,39 @@
+replicaCount: 2
+
+image:
+  repository: vinit2620/node-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: node-api.example.com
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+healthcheck:
+  path: /health
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
